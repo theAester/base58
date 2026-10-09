@@ -160,9 +160,7 @@ int read_input(FILE *input, struct vector *vec, size_t max_len) {
   size_t len = 0;
   size_t count;
   uint8_t buf[B58RI_BUF_LEN];
-  printf("in function\n");
   while ((count = fread(buf, 1, sizeof(buf), input)) > 0) {
-    printf("TEST\n");
     len += count;
     if (len > max_len) {
       fprintf(stderr, "Input is too long\n");
@@ -180,9 +178,11 @@ int read_input(FILE *input, struct vector *vec, size_t max_len) {
 #undef B58RI_BUF_LEN
 }
 
-void print_data(uint8_t *data, int64_t len) {
+void print_data(uint8_t *data, int64_t len, uint32_t wrap) {
   for (int i = 0; i < len; i++) {
     printf("%c", (char)data[i]);
+    if (wrap != 0 && i % wrap + 1 == wrap)
+      printf("\n");
   }
   printf("\n");
 }
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
     print_data(data, data_len);
     */
   } else {
-    print_data(output_buffer, output_size);
+    print_data(output_buffer, output_size, config.decode ? 0 : config.wrap);
   }
 
   if (output_buffer != NULL) {
