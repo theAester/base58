@@ -1,6 +1,9 @@
 #ifndef __CMD_H_
 #define __CMD_H_
 
+#define PROGRAM_NAME "base58"
+#define VERSION "0.1"
+
 struct config {
   bool decode;
   bool ignore_garbage;

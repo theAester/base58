@@ -8,9 +8,6 @@
 
 #include "cmd.h"
 
-#define PROGRAM_NAME "base58"
-#define VERSION "0.1"
-
 bool parse_uint32(const char *text, uint32_t *result) {
   char *end;
   unsigned long long value;
@@ -33,7 +30,7 @@ bool parse_uint32(const char *text, uint32_t *result) {
 void print_usage(FILE *stream) {
   fprintf(
       stream,
-      "Usage: bas58 [OPTION]... [FILE]\n"
+      "Usage: base58 [OPTION]... [FILE]\n"
       "Base58 encode or decode FILE, or standard input, to standard output.\n"
       "\n"
       "With no FILE, or when FILE is -, read standard input.\n"
