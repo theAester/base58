@@ -1,8 +1,10 @@
+#include <openssl/sha.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "base58.h"
 #include "vector.h"
 
 const char ALPHABET[58] = {
@@ -223,7 +225,7 @@ int64_t base58_encode(uint8_t **output, uint8_t *input, size_t input_len) {
   }
   destroy_vector64(&big_int);
 
-  for (register int i = 0; i < leading_zeros; i++) {
+  for (register size_t i = 0; i < leading_zeros; i++) {
     vector_push(&out_vec, (uint8_t *)"1", 1);
   }
   vector_reverse(&out_vec);
@@ -269,14 +271,16 @@ int64_t base58_decode(uint8_t **output, uint8_t *input, size_t input_len,
   struct vector out_vec;
   init_vector(&out_vec);
 
+  uint64_t zero = 0;
+
   for (size_t leading_ones = 0, max = input_len;
        leading_ones < max && input[leading_ones++] == '1'; input_len--) {
     input = input + leading_ones;
+    vector_push(&out_vec, (uint8_t *)&zero, 1);
   }
 
   struct vector64 big_int;
   init_vector64(&big_int);
-  uint64_t zero = 0;
   vector64_push(&big_int, &zero, 1);
 
   for (size_t i = 0; i < input_len; i++) {
@@ -296,4 +300,26 @@ int64_t base58_decode(uint8_t **output, uint8_t *input, size_t input_len,
   // DO NOT DESTROY out_vec. THE BUF INSIDE OF IT ESCAPES THIS FUNCTION'S SCOPE.
   // THIS IS INTENDED BEHAVIOR. (SCREAMS IN RUST)
   return out_vec.len;
+}
+
+void base58_checksum(uint8_t *buf, uint8_t *data, size_t data_len) {
+  uint8_t digest1[SHA256_DIGEST_LENGTH];
+  uint8_t digest2[SHA256_DIGEST_LENGTH];
+  SHA256(data, data_len, digest1);
+  SHA256(digest1, SHA256_DIGEST_LENGTH, digest2);
+  buf[0] = digest2[0];
+  buf[1] = digest2[1];
+  buf[2] = digest2[2];
+  buf[3] = digest2[3];
+  return;
+}
+
+bool base58_checksum_validate(uint8_t *buf, uint8_t *data, size_t data_len) {
+  uint8_t calculated[SHA256_DIGEST_LENGTH];
+  base58_checksum(calculated, data, data_len);
+  for (register int i = 0; i < 4; i++) {
+    if (calculated[i] != buf[i])
+      return false;
+  }
+  return true;
 }

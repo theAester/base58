@@ -55,7 +55,7 @@ int vector64_copy(struct vector64 *dst, struct vector64 *src) {
   if (dst->cap < src->cap) {
     return 1;
   }
-  for (register int i = 0; i < src->len; i++) {
+  for (register size_t i = 0; i < src->len; i++) {
     dst->buf[i] = src->buf[i];
   }
   dst->len = src->len;
@@ -70,7 +70,7 @@ int vector64_reverse(struct vector64 *vec) {
     destroy_vector64(&copy);
     return result;
   }
-  for (register int di = 0, si = vec->len - 1; di < vec->len; di++, si--) {
+  for (register size_t di = 0, si = vec->len - 1; di < vec->len; di++, si--) {
     vec->buf[di] = copy.buf[si];
   }
   destroy_vector64(&copy);
