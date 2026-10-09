@@ -251,12 +251,14 @@ void bigint_add_multiply(struct vector64 *v, uint64_t m, uint64_t r) {
 void bytes_from_bigint(struct vector *bytes, struct vector64 *bigint) {
   if (bigint->len == 0)
     return;
+  bool discard_zeros = true;
   for (size_t i = 0; i < bigint->len; i++) {
     uint64_t p = bigint->buf[i];
     for (register int j = 7; j >= 0; j--) {
       uint8_t b = (p >> (j * 8)) & 0xff;
-      if (i == 0 && b == 0)
+      if (discard_zeros && b == 0)
         continue;
+      discard_zeros = false;
       vector_push(bytes, &b, 1);
     }
   }

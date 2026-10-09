@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "base58.h"
+#include "ttyhelper.h"
 #include "vector.h"
 
 #define PROGRAM_NAME "base58"
@@ -160,20 +161,37 @@ int read_input(FILE *input, struct vector *vec, size_t max_len) {
   size_t len = 0;
   size_t count;
   uint8_t buf[B58RI_BUF_LEN];
-  while ((count = fread(buf, 1, sizeof(buf), input)) > 0) {
-    len += count;
-    if (len > max_len) {
-      fprintf(stderr, "Input is too long\n");
-      return 1;
+
+  if (input_is_tty(input)) {
+    while (fgets((char *)buf, sizeof(buf), input) != NULL) {
+      count = strlen((char *)buf);
+
+      len += count;
+      if (len > max_len) {
+        fprintf(stderr, "Input is too long\n");
+        return 1;
+      }
+      if (vector_push(vec, buf, count))
+        return 1;
     }
-    if (vector_push(vec, buf, count))
-      return 1;
+  } else {
+    while ((count = fread(buf, 1, sizeof(buf), input)) > 0) {
+      len += count;
+      if (len > max_len) {
+        fprintf(stderr, "Input is too long\n");
+        return 1;
+      }
+      if (vector_push(vec, buf, count))
+        return 1;
+    }
   }
+
   if (ferror(input)) {
     fprintf(stderr, "Error while reading input: [%d]%s\n", errno,
             strerror(errno));
     return 1;
   }
+
   return 0;
 #undef B58RI_BUF_LEN
 }
@@ -291,7 +309,8 @@ int main(int argc, char **argv) {
     print_data(data, data_len);
     */
   } else {
-    print_data(output_buffer, output_size, config.decode ? 0 : config.wrap);
+    print_data(output_buffer, output_size,
+               config.decode && output_is_tty(stdout) ? 0 : config.wrap);
   }
 
   if (output_buffer != NULL) {
